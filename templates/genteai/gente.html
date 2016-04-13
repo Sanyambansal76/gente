@@ -1,0 +1,150 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1, initial-scale=1">
+        <link rel="stylesheet" href={% static 'css/global.css' %}>
+
+        <link rel="stylesheet" href={% static 'css/bootstrap.min.css' %}>
+        <link href='https://fonts.googleapis.com/css?family=Raleway:400,700' rel='stylesheet' type='text/css'>
+        <script src={% static "js/jquery-1.11.3.min.js" %}></script>
+        <script src={% static "js/bootstrap.min.js" %}></script>
+
+        <title>Gente - App</title>
+    </head>
+    <body>
+      <div class="logout-btn">
+        <a href="/logout/" class="button">Logout</a>
+      </div>
+        <div class="wrap">
+            <div class="mobile">
+                <div class="mobile-head">
+                    <div></div>
+                </div>
+                <div class="mobile-body">
+                    <div class="head">
+                        <div class="back">
+                            <a href="">
+                                <span class="glyphicon glyphicon-arrow-left"></span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="history" id="history">
+                        <div id="show-message"></div>
+                        <div id="btm"></div>
+                    </div>
+                    <div class="control">
+                        <form class="" onsubmit="return sendMessage()">
+                            <input type="text"
+                                    name="name"
+                                    placeholder="Type Message..."
+
+                                    id="message"
+                                    autocomplete="off"
+                                    autofocus="on">
+                            <button type="submit" name="button">
+                                <span class="glyphicon glyphicon-send"></span>
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+                <div class="mobile-footer">
+                    <div></div>
+                </div>
+            </div>
+        </div>
+
+
+    <script type="text/javascript">
+
+    $('<audio id="CHATAudio"><source src="{% static "js/notify.mp3" %}" type="audio/mpeg"></audio>').appendTo('body');
+    $('<audio id="CHATAudio1"><source src="{% static "js/send.mp3" %}" type="audio/mpeg"></audio>').appendTo('body');
+    var $div2 = $('<div>');
+    $div2.attr('id', 'bottom');
+            var CHAT = function(){
+                this.response_msg = '';
+                this.time = new Date();
+                this.user_msg;
+
+            }
+
+            CHAT.prototype.sendAjax = function (a, b) {
+                var p = $('#history');
+                ajaxResponse(a.value,b,p);
+                a.value = '';
+            };
+
+            CHAT.prototype.CHATUI = function (elm, cls, um) {
+
+                // initialize Div
+                var msgDiv = document.createElement('div'),
+                    clear = document.createElement('div'),
+                    chunk = document.createElement('div'),
+                    m = document.createElement('span'),
+                    t = document.createElement('span'),
+                    a,b;
+
+                this.time.getHours() >= 12 ? a = 'PM' : a = 'AM';
+                this.time.getMinutes() < 10 ? b = '0'+ this.time.getMinutes() : b = this.time.getMinutes();
+
+                // innerHTML
+                m.innerHTML = um;
+                t.innerHTML = '&nbsp;&nbsp;'+this.time.getHours() + ':' + b + '&nbsp;' + a;
+
+
+                // setAttribute
+                msgDiv.setAttribute('class', cls);
+                chunk.setAttribute('class', 'chunk'+cls );
+                m.setAttribute('class', 'msg');
+                t.setAttribute('class', 'time');
+                clear.setAttribute('style', 'clear:both');
+
+                // appendChild
+                chunk.appendChild(m);
+                chunk.appendChild(t);
+                msgDiv.appendChild(chunk);
+                elm.appendChild(msgDiv);
+                elm.appendChild(clear);
+            };
+
+            var ajaxResponse = function(m,b,p){
+              $.ajax({
+                    url: "/ai/send-message/",
+                    type: "POST", // http method
+                    data: {
+                        csrfmiddlewaretoken: "{{ csrf_token }}",
+                        message: m
+                    },
+                    success: function(data){
+                      data = JSON.parse(data)
+                      $('#CHATAudio')[0].play();
+                      client.CHATUI( b, 'left' , data.message );
+                      p.animate(
+                          { scrollTop: 1000000 },
+                          'slow'
+                      );
+                    },
+                });
+            }
+            var client = new CHAT();
+            function sendMessage(){
+                var m = document.getElementById('message'),
+                    h = document.getElementById('show-message'),
+                    p = $('#history'),
+                    b = $('#btm');
+                if( m.value == '' ) { return false; }
+                $('#CHATAudio1')[0].play();
+                client.CHATUI(h, 'right', m.value );
+                p.animate(
+                    { scrollTop: 1000000 },
+                    'slow'
+                );
+                client.sendAjax( m, h );
+
+                return false;
+            }
+    </script>
+    </body>
+</html>

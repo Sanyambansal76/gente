@@ -1,0 +1,4 @@
+*.pyc
+database.db
+db.db
+media/
